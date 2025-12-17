@@ -1,5 +1,6 @@
 #include <cassert>
 #include <charconv>
+#include <climits>
 #include <expected>
 #include <string>
 #include <vector>
@@ -13,7 +14,8 @@ using std::string;
 std::expected<vector<string>, string> read_file(const string &filename);
 
 long fuel_from_mass(long mass) {
-    return (mass / 3 ) - 2;
+    long fuel = (mass / 3 ) - 2;
+    return fuel >= 0 ? fuel : 0;
 }
 
 int main(void) {
@@ -27,15 +29,25 @@ int main(void) {
     }
     vector<string> file_contents = result.value();
 
-    long total_fuel = 0;
+    long part1 = 0;
+    long part2 = 0;
     for (const auto& line: file_contents) {
         long mass;
         std::from_chars(line.data(), line.data() + line.size(), mass);
-        total_fuel += fuel_from_mass(mass);
+        part1 += fuel_from_mass(mass);
+
+        long new_fuel = fuel_from_mass(mass);
+        long starting_mass = mass;
+        while (new_fuel > 0) {
+            mass += new_fuel;
+            new_fuel = fuel_from_mass(new_fuel);
+        }
+
+        part2 += mass - starting_mass;
     }
 
-    long part1 = total_fuel;
-    long part2 = 0;
+    assert(part1 == 3512133);
+    assert(part2 == 5265294);
 
     println("Part 1: {}", part1);
     println("Part 2: {}", part2);
