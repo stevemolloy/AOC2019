@@ -90,6 +90,21 @@ int main(void) {
     part1 = memory[0];
     assert(part1 == 5866714);
 
+    for (size_t i=0; i<memory.size(); i++) {
+        for (size_t j=0; j<memory.size(); j++) {
+            memory = original_mem;
+            memory[1] = i;
+            memory[2] = j;
+            if (!interpret_memory(memory)) continue;
+            if (memory[0] == 19690720) {
+                println("Found a solution!");
+                part2 = memory[1] * 100 + memory[2];
+                break;
+            }
+        }
+        if (part2 > 0) break;
+    }
+
     println("Part 1: {}", part1);
     println("Part 2: {}", part2);
 
