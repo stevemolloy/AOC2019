@@ -1,5 +1,4 @@
 #include <cassert>
-#include <charconv>
 #include <expected>
 #include <sstream>
 #include <string>
@@ -11,31 +10,55 @@ using std::println;
 using std::vector;
 using std::string;
 
-void interpret_instructions(vector<long>& instructions) {
-    long i_count = instructions.size();
+struct Instruction {
+    long opcode;
+    vector<long> params;
+    long size;
+};
 
-    for (long i=0; i<i_count; ) {
-        long opcode = instructions[i];
+constexpr Instruction ADD = {1, {}, 4};
+constexpr Instruction MUL = {2, {}, 4};
+constexpr Instruction HALT = {99, {}, 1};
 
-        if (opcode == 1) {
-            long param1 = instructions[i+1];
-            long param2 = instructions[i+2];
-            long result = instructions[i+3];
-            instructions[result] = instructions[param1] + instructions[param2];
-            i += 4;
-        } else if (opcode == 2) {
-            long param1 = instructions[i+1];
-            long param2 = instructions[i+2];
-            long result = instructions[i+3];
-            instructions[result] = instructions[param1] * instructions[param2];
-            i += 4;
-        } else if (opcode == 99) {
+std::optional<Instruction> make_instruction(long ip, vector<long>& memory) {
+    long opcode = memory[ip];
+
+    Instruction instr;
+    if (opcode == 1) {
+        instr = ADD;
+        for (int i=1; i<instr.size; i++) instr.params.push_back(memory[ip+i]);
+    } else if (opcode == 2) {
+        instr = MUL;
+        for (int i=1; i<instr.size; i++) instr.params.push_back(memory[ip+i]);
+    } else if (opcode == 99) {
+        instr = HALT;
+    } else {
+        return std::nullopt;
+    }
+
+    return instr;
+}
+
+bool interpret_memory(vector<long>& memory) {
+    long i_count = memory.size();
+
+    for (long ip=0; ip<i_count; ) {
+
+        auto instr = make_instruction(ip, memory);
+        if (!instr) return false;
+        if (instr->opcode == 1) {
+            memory[instr->params[2]] = memory[instr->params[0]] + memory[instr->params[1]];
+        } else if (instr->opcode == 2) {
+            memory[instr->params[2]] = memory[instr->params[0]] * memory[instr->params[1]];
+        } else if (instr->opcode == 99) {
+            instr = HALT;
             break;
         } else {
-            println("ERROR: Unknown opcode: {}", opcode);
-            exit(1);
+            return false;
         }
+        ip += instr->size;
     }
+    return true;
 }
 
 std::expected<vector<string>, string> read_file(const string &filename);
@@ -52,18 +75,19 @@ int main(void) {
     long part1 = 0;
     long part2 = 0;
 
-    vector<long> instructions;
+    vector<long> memory;
     std::stringstream ss(file_contents[0]);
     for (long i; ss >> i;) {
-        instructions.push_back(i);
+        memory.push_back(i);
         if (ss.peek() == ',') ss.ignore();
     }
+    vector<long> original_mem = memory;
 
-    instructions[1] = 12;
-    instructions[2] = 2;
+    memory[1] = 12;
+    memory[2] = 2;
 
-    interpret_instructions(instructions);
-    part1 = instructions[0];
+    interpret_memory(memory);
+    part1 = memory[0];
     assert(part1 == 5866714);
 
     println("Part 1: {}", part1);
