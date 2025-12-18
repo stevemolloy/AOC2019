@@ -10,6 +10,8 @@ using std::println;
 using std::vector;
 using std::string;
 
+constexpr long PART2_TARGET = 19690720;
+
 struct Instruction {
     long opcode;
     vector<long> params;
@@ -19,6 +21,58 @@ struct Instruction {
 constexpr Instruction ADD = {1, {}, 4};
 constexpr Instruction MUL = {2, {}, 4};
 constexpr Instruction HALT = {99, {}, 1};
+
+std::optional<Instruction> make_instruction(long ip, vector<long>& memory);
+bool interpret_memory(vector<long>& memory);
+std::expected<vector<string>, string> read_file(const string &filename);
+
+int main(void) {
+    string filename = "data/input.txt";
+    auto result = read_file(filename);
+    if (!result) {
+        println("ERROR: Filename = '{}'", filename);
+        return 1;
+    }
+    vector<string> file_contents = result.value();
+
+    long part1 = 0;
+    long part2 = 0;
+
+    vector<long> memory;
+    std::stringstream ss(file_contents[0]);
+    for (long i; ss >> i;) {
+        memory.push_back(i);
+        if (ss.peek() == ',') ss.ignore();
+    }
+    vector<long> original_mem = memory;
+
+    memory[1] = 12;
+    memory[2] = 2;
+
+    interpret_memory(memory);
+    part1 = memory[0];
+    assert(part1 == 5866714);
+
+    for (size_t i=0; i<memory.size(); i++) {
+        for (size_t j=0; j<memory.size(); j++) {
+            memory = original_mem;
+            memory[1] = i;
+            memory[2] = j;
+            if (!interpret_memory(memory)) continue;
+            if (memory[0] == PART2_TARGET) {
+                println("Found a solution!");
+                part2 = memory[1] * 100 + memory[2];
+                break;
+            }
+        }
+        if (part2 > 0) break;
+    }
+
+    println("Part 1: {}", part1);
+    println("Part 2: {}", part2);
+
+    return 0;
+}
 
 std::optional<Instruction> make_instruction(long ip, vector<long>& memory) {
     long opcode = memory[ip];
@@ -59,56 +113,6 @@ bool interpret_memory(vector<long>& memory) {
         ip += instr->size;
     }
     return true;
-}
-
-std::expected<vector<string>, string> read_file(const string &filename);
-
-int main(void) {
-    string filename = "data/input.txt";
-    auto result = read_file(filename);
-    if (!result) {
-        println("ERROR: Filename = '{}'", filename);
-        return 1;
-    }
-    vector<string> file_contents = result.value();
-
-    long part1 = 0;
-    long part2 = 0;
-
-    vector<long> memory;
-    std::stringstream ss(file_contents[0]);
-    for (long i; ss >> i;) {
-        memory.push_back(i);
-        if (ss.peek() == ',') ss.ignore();
-    }
-    vector<long> original_mem = memory;
-
-    memory[1] = 12;
-    memory[2] = 2;
-
-    interpret_memory(memory);
-    part1 = memory[0];
-    assert(part1 == 5866714);
-
-    for (size_t i=0; i<memory.size(); i++) {
-        for (size_t j=0; j<memory.size(); j++) {
-            memory = original_mem;
-            memory[1] = i;
-            memory[2] = j;
-            if (!interpret_memory(memory)) continue;
-            if (memory[0] == 19690720) {
-                println("Found a solution!");
-                part2 = memory[1] * 100 + memory[2];
-                break;
-            }
-        }
-        if (part2 > 0) break;
-    }
-
-    println("Part 1: {}", part1);
-    println("Part 2: {}", part2);
-
-    return 0;
 }
 
 std::expected<vector<string>, string> read_file(const string &filename) {
