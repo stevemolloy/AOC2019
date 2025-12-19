@@ -22,7 +22,6 @@ void print_cell(Cell cell) {
 }
 
 std::vector<Cell> findCommon(std::vector<Cell> vec1, std::vector<Cell> vec2) {
-    // Sort both vectors first (required for set_intersection)
     std::ranges::sort(vec1);
     std::ranges::sort(vec2);
     
@@ -57,19 +56,22 @@ Move::Move(char c, long dist) : dist(dist) {
 }
 
 void Move::apply(vector<Cell>& path) const {
+    size_t ind = 0;
+    long step = 0;
+    switch (dir) {
+        case Move::MOVE_LEFT:  ind = 0; step = -1; break;
+        case Move::MOVE_RIGHT: ind = 0; step = 1;  break;
+        case Move::MOVE_DOWN:  ind = 1; step = -1; break;
+        case Move::MOVE_UP:    ind = 1; step = 1;  break;
+        default:
+            println("ERROR: Memory corruption!");
+            exit(1);
+    }
     Cell loc;
     if (path.size() > 0) loc = path.back();
     else loc = {0, 0};
     for (long i=0; i<dist; i++) {
-        switch (dir) {
-            case Move::MOVE_LEFT:  loc[0] -= 1; break;
-            case Move::MOVE_RIGHT: loc[0] += 1; break;
-            case Move::MOVE_DOWN:  loc[1] -= 1; break;
-            case Move::MOVE_UP:    loc[1] += 1; break;
-            default:
-                println("ERROR: Memory corruption!");
-                exit(1);
-        }
+        loc[ind] += step;
         path.push_back(loc);
     }
 }
@@ -108,26 +110,12 @@ int main(void) {
     paths[1].reserve(dirs[1].size());
 
     Cell loc = {0,0};
-    // paths[0].push_back(loc);
     for (const Move& dir: dirs[0])
         dir.apply(paths[0]);
 
     loc = {0,0};
-    // paths[1].push_back(loc);
     for (const Move& dir: dirs[1])
         dir.apply(paths[1]);
-
-    // println("------------------------------");
-    // for (const auto& loc: paths[0]) {
-    //     for (auto val: loc) std::print("{}, ", val);
-    //     println("");
-    // }
-    // println("------------------------------");
-    // for (const auto& loc: paths[1]) {
-    //     for (auto val: loc) std::print("{}, ", val);
-    //     println("");
-    // }
-    // println("------------------------------");
 
     vector<Cell> common = findCommon(paths[0], paths[1]);
     long mindist = LONG_MAX;
