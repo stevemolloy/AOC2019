@@ -16,6 +16,11 @@ using std::string;
 
 using Cell = vector<long>;
 
+void print_cell(Cell cell) {
+    for (const long& val : cell)
+        std::print("{}, ", val);
+}
+
 std::vector<Cell> findCommon(std::vector<Cell> vec1, std::vector<Cell> vec2) {
     // Sort both vectors first (required for set_intersection)
     std::ranges::sort(vec1);
@@ -133,7 +138,28 @@ int main(void) {
 
     long part1 = mindist;
 
-    long part2 = 0;
+    long min_pathlen = LONG_MAX;
+    for (const auto& cell2test : common) {
+        long path1len = 0, path2len = 0;
+        for (size_t i=0; i<paths[0].size(); i++) {
+            if (cell2test == paths[0][i]) {
+                path1len = i+1;
+                break;
+            }
+        }
+        assert(path1len != 0);
+        for (size_t i=0; i<paths[1].size(); i++) {
+            if (cell2test == paths[1][i]) {
+                path2len = i+1;
+                break;
+            }
+        }
+        assert(path2len != 0);
+        long pathlen = path1len + path2len;
+        if (pathlen < min_pathlen) min_pathlen = pathlen;
+    }
+
+    long part2 = min_pathlen;
 
     println("Part 1: {}", part1);
     println("Part 2: {}", part2);
