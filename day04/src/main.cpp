@@ -89,16 +89,16 @@ int main(void) {
     long part2 = 0;
     for (long val = first; val<=last; val++) {
         Password pass(val);
-        if (pass.check()) part1 += 1;
-        if (pass.check_limited()) {
-            println("Pass: {}", pass.input);
-            part2 += 1;
+        if (pass.check()) {
+            part1 += 1;
+            if (pass.check_limited()) part2 += 1;
         }
     }
 
+    assert(part1 == 1955);
+    assert(part2 == 1319);
     println("Part 1: {}", part1);
-    // 1749 is too high
-    println("Part 2: (1749 is too high) {}", part2);
+    println("Part 2: {}", part2);
 
     return 0;
 }
