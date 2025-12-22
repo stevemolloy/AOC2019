@@ -17,8 +17,12 @@ enum InstrType {
     INS_MUL,
     INS_INPUT,
     INS_OUTPUT,
-    INS_HALT
+    INS_HALT,
+
+    INS_COUNT,
 };
+
+static_assert(INS_COUNT==5, "Number of instructions");
 
 enum Mode {
     MODE_IM,
