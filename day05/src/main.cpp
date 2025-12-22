@@ -1,17 +1,10 @@
 #include <cassert>
-#include <deque>
-#include <expected>
-#include <optional>
-#include <sstream>
 #include <string>
-#include <vector>
 #include <print>
-#include <fstream>
 
 #include "machine.hpp"
 
 using std::println;
-using std::vector;
 using std::string;
 
 int main(void) {
