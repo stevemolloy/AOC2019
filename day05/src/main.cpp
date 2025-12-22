@@ -1,4 +1,5 @@
 #include <cassert>
+#include <deque>
 #include <expected>
 #include <optional>
 #include <sstream>
@@ -33,7 +34,7 @@ struct Instruction {
 };
 
 class Machine {
-    vector<long> input;
+    std::deque<long> input;
     vector<long> output;
     long ip = 0;
 public:
@@ -41,8 +42,13 @@ public:
     void load_mem_from_file(string filename);
     void load_mem_from_string(string string);
     std::optional<Instruction> make_instruction() const;
+    void add_input_val(long val);
     bool run();
 };
+
+void Machine::add_input_val(long val) {
+    input.push_front(val);
+}
 
 std::expected<vector<string>, string> read_file(const string &filename);
 long size_from_type(InstrType typ);
@@ -61,6 +67,7 @@ int main(void) {
     string filename = "data/input.txt";
     Machine machine;
     machine.load_mem_from_file(filename);
+    machine.add_input_val(1);
     machine.run();
 
     long part1 = 0;
@@ -147,6 +154,31 @@ bool Machine::run() {
 
                 memory[instr->params[2]] = op1 * op2;
             } break;
+            case INS_INPUT: {
+                if (input.size() <= 0) {
+                    println("ERROR: Not enough data in the input vector");
+                    return false;
+                }
+                if (instr->modes[0] == MODE_IM) {
+                    println("ERROR: Immediate mode not appropriate for storing data");
+                    return false;
+                }
+                memory[instr->params[0]] = input[0];
+                input.pop_front();
+            } break;
+            case INS_OUTPUT: {
+                long op;
+                if (instr->modes[0] == MODE_IM) {
+                    op = instr->params[0];
+                } else if (instr->modes[0] == MODE_POS) {
+                    op = memory[instr->params[0]];
+                } else {
+                    println("ERROR: Unknown mode type in output operation");
+                    return false;
+                }
+                println("OUTPUT: {}", op);
+                output.push_back(op);
+            } break;
             case INS_HALT: return true;
             default: {
                 println("ERROR: Unknown function (code = {})", memory[ip]);
@@ -197,6 +229,7 @@ std::optional<Instruction> Machine::make_instruction() const {
     } else if (opcode == 99) {
         instr.type = INS_HALT;
     } else {
+        println("ERROR: Unknown opcode: '{}'", opcode);
         return std::nullopt;
     }
 
