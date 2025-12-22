@@ -18,11 +18,13 @@ enum InstrType {
     INS_INPUT,
     INS_OUTPUT,
     INS_HALT,
+    INS_JIT,
+    INS_JIF,
+    INS_LT,
+    INS_EQ,
 
     INS_COUNT,
 };
-
-static_assert(INS_COUNT==5, "Number of instructions");
 
 enum Mode {
     MODE_IM,
@@ -35,13 +37,15 @@ struct Instruction {
     vector<long> params;
     vector<Mode> modes;
     long size;
+    bool controls_ip = false;
+    long get_operand(const vector<long> memory, size_t index) const;
 };
 
 class Machine {
     std::deque<long> input;
-    vector<long> output;
     long ip = 0;
 public:
+    vector<long> output;
     vector<long> memory;
     void load_mem_from_file(string filename);
     void load_mem_from_string(string string);
@@ -59,23 +63,152 @@ long size_from_type(InstrType typ);
 
 int main(void) {
     {
+        println("------------------------------");
+        println("            TESTS");
+        println("------------------------------");
         string filename = "../day02/data/input.txt";
         Machine machine;
         machine.load_mem_from_file(filename);
         machine.memory[1] = 12;
         machine.memory[2] = 2;
-        machine.run();
+        assert(machine.run());
         assert(machine.memory[0] == 5866714);
+        println("Test 1: Passed");
+        println("------------------------------");
+
+        filename = "data/test1.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(8);
+        assert(machine.run());
+        assert(machine.output.back() == 1);
+        println("Test 2: Passed");
+        println("------------------------------");
+
+        filename = "data/test1.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(7);
+        assert(machine.run());
+        assert(machine.output.back() == 0);
+        println("Test 3: Passed");
+        println("------------------------------");
+
+        filename = "data/test2.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(7);
+        assert(machine.run());
+        assert(machine.output.back() == 1);
+        println("Test 4: Passed");
+        println("------------------------------");
+
+        filename = "data/test2.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(8);
+        assert(machine.run());
+        assert(machine.output.back() == 0);
+        println("Test 5: Passed");
+        println("------------------------------");
+
+        filename = "data/test3.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(8);
+        assert(machine.run());
+        assert(machine.output.back() == 1);
+        println("Test 6: Passed");
+        println("------------------------------");
+
+        filename = "data/test3.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(7);
+        assert(machine.run());
+        assert(machine.output.back() == 0);
+        println("Test 7: Passed");
+        println("------------------------------");
+
+        filename = "data/test4.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(8);
+        assert(machine.run());
+        assert(machine.output.back() == 0);
+        println("Test 8: Passed");
+        println("------------------------------");
+
+        filename = "data/test4.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(7);
+        assert(machine.run());
+        assert(machine.output.back() == 1);
+        println("Test 9: Passed");
+        println("------------------------------");
+
+        filename = "data/test5.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(1);
+        assert(machine.run());
+        assert(machine.output.back() == 1);
+        println("Test 10: Passed");
+        println("------------------------------");
+
+        filename = "data/test5.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(0);
+        assert(machine.run());
+        assert(machine.output.back() == 0);
+        println("Test 11: Passed");
+        println("------------------------------");
+
+        filename = "data/test6.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(1);
+        assert(machine.run());
+        assert(machine.output.back() == 1);
+        println("Test 12: Passed");
+        println("------------------------------");
+
+        filename = "data/test6.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(0);
+        assert(machine.run());
+        assert(machine.output.back() == 0);
+        println("Test 13: Passed");
+        println("------------------------------");
+
+        filename = "data/test7.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(0);
+        assert(machine.run());
+        assert(machine.output.back() == 999);
+        println("Test 14: Passed");
+        println("------------------------------");
+
+        filename = "data/test7.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(8);
+        assert(machine.run());
+        assert(machine.output.back() == 1000);
+        println("Test 15: Passed");
+        println("------------------------------");
+
+        filename = "data/test7.txt";
+        machine.load_mem_from_file(filename);
+        machine.add_input_val(9);
+        assert(machine.run());
+        assert(machine.output.back() == 1001);
+        println("Test 16: Passed");
+        println("------------------------------");
     }
 
     string filename = "data/input.txt";
     Machine machine;
     machine.load_mem_from_file(filename);
     machine.add_input_val(1);
-    machine.run();
+    assert(machine.run());
+    long part1 = machine.output.back();
 
-    long part1 = 0;
-    long part2 = 0;
+    Machine machine_part2;
+    machine_part2.load_mem_from_file(filename);
+    machine_part2.add_input_val(5);
+    machine_part2.run();
+    long part2 = machine_part2.output.back();
 
     println("Part 1: {}", part1);
     println("Part 2: {}", part2);
@@ -98,12 +231,21 @@ long size_from_type(InstrType typ) {
     switch (typ) {
         case INS_ADD:
         case INS_MUL:
+        case INS_LT:
+        case INS_EQ:
             return 4;
         case INS_INPUT:
         case INS_OUTPUT:
             return 2;
+        case INS_JIT:
+        case INS_JIF:
+            return 3;
         case INS_HALT:
             return 1;
+        case INS_COUNT:
+            println("ERROR: 'INS_COUNT' provided to size_from_type");
+            println("This means a bug in the calling code");
+            exit(1);
     }
 }
 
@@ -119,21 +261,8 @@ bool Machine::run() {
                     println("ERROR: Immediate mode not appropriate for the result of addition");
                     return false;
                 }
-                long op1, op2;
-                if (instr->modes[0] == MODE_IM) op1 = instr->params[0];
-                else if (instr->modes[0] == MODE_POS) op1 = memory[instr->params[0]];
-                else {
-                    println("ERROR: Unknown mode type in addition operation");
-                    return false;
-                }
-
-                if (instr->modes[1] == MODE_IM) op2 = instr->params[1];
-                else if (instr->modes[1] == MODE_POS) op2 = memory[instr->params[1]];
-                else {
-                    println("ERROR: Unknown mode type in addition operation");
-                    return false;
-                }
-
+                long op1 = instr->get_operand(memory, 0);
+                long op2 = instr->get_operand(memory, 1);
                 memory[instr->params[2]] = op1 + op2;
             } break;
             case INS_MUL:{
@@ -141,21 +270,8 @@ bool Machine::run() {
                     println("ERROR: Immediate mode not appropriate for the result of multiplication");
                     return false;
                 }
-                long op1, op2;
-                if (instr->modes[0] == MODE_IM) op1 = instr->params[0];
-                else if (instr->modes[0] == MODE_POS) op1 = memory[instr->params[0]];
-                else {
-                    println("ERROR: Unknown mode type in multiplication operation");
-                    return false;
-                }
-
-                if (instr->modes[1] == MODE_IM) op2 = instr->params[1];
-                else if (instr->modes[1] == MODE_POS) op2 = memory[instr->params[1]];
-                else {
-                    println("ERROR: Unknown mode type in multiplication operation");
-                    return false;
-                }
-
+                long op1 = instr->get_operand(memory, 0);
+                long op2 = instr->get_operand(memory, 1);
                 memory[instr->params[2]] = op1 * op2;
             } break;
             case INS_INPUT: {
@@ -171,17 +287,41 @@ bool Machine::run() {
                 input.pop_front();
             } break;
             case INS_OUTPUT: {
-                long op;
-                if (instr->modes[0] == MODE_IM) {
-                    op = instr->params[0];
-                } else if (instr->modes[0] == MODE_POS) {
-                    op = memory[instr->params[0]];
-                } else {
-                    println("ERROR: Unknown mode type in output operation");
-                    return false;
-                }
+                long op = instr->get_operand(memory, 0);
                 println("OUTPUT: {}", op);
                 output.push_back(op);
+            } break;
+            case INS_JIF: {
+                long op1 = instr->get_operand(memory, 0);
+                long op2 = instr->get_operand(memory, 1);
+                if (op1 == 0) ip = op2;
+                else ip += instr->size;
+            } break;
+            case INS_JIT: {
+                long op1 = instr->get_operand(memory, 0);
+                long op2 = instr->get_operand(memory, 1);
+                if (op1 != 0) ip = op2;
+                else ip += instr->size;
+            } break;
+            case INS_LT: {
+                if (instr->modes[2] == MODE_IM) {
+                    println("ERROR: Immediate mode not appropriate for storing data");
+                    return false;
+                }
+                long op1 = instr->get_operand(memory, 0);
+                long op2 = instr->get_operand(memory, 1);
+                if (op1 < op2) memory[instr->params[2]] = 1;
+                else memory[instr->params[2]] = 0;
+            } break;
+            case INS_EQ: {
+                if (instr->modes[2] == MODE_IM) {
+                    println("ERROR: Immediate mode not appropriate for storing data");
+                    return false;
+                }
+                long op1 = instr->get_operand(memory, 0);
+                long op2 = instr->get_operand(memory, 1);
+                if (op1 == op2) memory[instr->params[2]] = 1;
+                else memory[instr->params[2]] = 0;
             } break;
             case INS_HALT: return true;
             default: {
@@ -189,7 +329,7 @@ bool Machine::run() {
                 return false;
             }
         }
-        ip += instr->size;
+        if (!instr->controls_ip) ip += instr->size;
     }
     return true;
 }
@@ -208,6 +348,7 @@ void Machine::load_mem_from_file(string filename) {
 }
 
 void Machine::load_mem_from_string(string string) {
+    memory.clear();
     std::stringstream ss(string);
     for (long i; ss >> i;) {
         memory.push_back(i);
@@ -222,17 +363,22 @@ std::optional<Instruction> Machine::make_instruction() const {
     instrcode /= 100;
 
     Instruction instr;
-    if (opcode == 1) {
-        instr.type = INS_ADD;
-    } else if (opcode == 2) {
-        instr.type = INS_MUL;
-    } else if (opcode == 3) {
-        instr.type = INS_INPUT;
-    } else if (opcode == 4) {
-        instr.type = INS_OUTPUT;
-    } else if (opcode == 99) {
-        instr.type = INS_HALT;
-    } else {
+    if (opcode == 1)       instr.type = INS_ADD;
+    else if (opcode == 2)  instr.type = INS_MUL;
+    else if (opcode == 3)  instr.type = INS_INPUT;
+    else if (opcode == 4)  instr.type = INS_OUTPUT;
+    else if (opcode == 5)  {
+        instr.type = INS_JIT;
+        instr.controls_ip = true;
+    }
+    else if (opcode == 6)  {
+        instr.type = INS_JIF;
+        instr.controls_ip = true;
+    }
+    else if (opcode == 7)  instr.type = INS_LT;
+    else if (opcode == 8)  instr.type = INS_EQ;
+    else if (opcode == 99) instr.type = INS_HALT;
+    else {
         println("ERROR: Unknown opcode: '{}'", opcode);
         return std::nullopt;
     }
@@ -250,5 +396,15 @@ std::optional<Instruction> Machine::make_instruction() const {
     }
 
     return instr;
+}
+
+long Instruction::get_operand(const vector<long> memory, size_t index) const {
+    Mode mode = modes[index];
+    long param = params[index];
+
+    switch (mode) {
+        case MODE_IM: return param;
+        case MODE_POS: return memory[param];
+    }
 }
 
