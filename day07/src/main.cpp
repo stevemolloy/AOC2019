@@ -16,21 +16,6 @@ int main(void) {
     // string filename = "data/test2.txt";
     // string filename = "data/test3.txt";
 
-    // {
-    //     vector<int> phases = {4,3,2,1,0};
-    //     long prev_output = 0;
-    //     for (int phase: phases) {
-    //         Machine machine;
-    //         machine.load_mem_from_file(filename);
-    //         machine.add_input_val(prev_output);
-    //         machine.add_input_val(phase);
-    //         machine.run();
-    //         prev_output = machine.output.back();
-    //     }
-    //     println("output = {}", prev_output);
-    // }
-    // return 0;
-
     vector<int> phases = {0, 1, 2, 3, 4};
     vector<vector<int>> phase_list;
 
