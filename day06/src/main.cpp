@@ -34,13 +34,11 @@ int main(void) {
     }
 
     long part1 = 0;
-    for (const auto& node: links)
-        part1 += find_chain_length(node.second, links);
+    for (const auto& node: links) part1 += find_chain_length(node.second, links);
     if (filename == "data/input.txt") assert(part1 == 145250);
 
     vector<string> you_2_com = find_chain("YOU", links);
     vector<string> san_2_com = find_chain("SAN", links);
-
     for (size_t i=0; i<you_2_com.size(); i++) {
         if (you_2_com.back() != san_2_com.back()) break;
         you_2_com.pop_back();
