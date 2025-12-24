@@ -18,7 +18,6 @@ int main(void) {
 
     vector<int> phases = {0, 1, 2, 3, 4};
     vector<vector<int>> phase_list;
-
     do {
         phase_list.push_back(phases);
     } while (std::ranges::next_permutation(phases).found);
@@ -38,38 +37,23 @@ int main(void) {
             }
             prev_output = machine.output.back();
         }
-        println("{}: Final output: {}", ++i, prev_output);
         if (prev_output > best_output) best_output = prev_output; 
     }
 
     long part1 = best_output;
+    if (filename == "data/input.txt") assert(part1 == 20413);
+
+    vector<Machine> amp_chain;
+    for (size_t i=0; i<5; i++) {
+        Machine machine;
+        machine.load_mem_from_file(filename);
+    }
+
     long part2 = 0;
 
     println("Part 1: {}", part1);
     println("Part 2: {}", part2);
 
     return 0;
-}
-
-long find_chain_length(const string& node, const std::unordered_map<string, string>& links) {
-    long distance = 1;
-    string current = node;
-    
-    while (links.contains(current)) {
-        current = links.at(current);
-        distance++;
-    }
-    
-    return distance;
-}
-
-vector<string> find_chain(const string& node, const std::unordered_map<string, string> links) {
-    vector<string> chain;
-    string current = node;
-    while (links.contains(current)) {
-        current = links.at(current);
-        chain.push_back(current);
-    }
-    return chain;
 }
 
