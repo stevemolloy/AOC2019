@@ -35,15 +35,26 @@ struct Instruction {
     vector<Mode> modes;
     long size;
     bool controls_ip = false;
-    long get_operand(const vector<long> memory, size_t index) const;
+    std::optional<long> get_operand(const vector<long> memory, size_t index) const;
     long size_from_type() const;
 };
 
+enum MachineState {
+    STATE_FRESH,
+    STATE_RUNNING,
+    STATE_AWAITING_INPUT,
+    STATE_HALTED,
+    STATE_ERROR,
+};
+
 class Machine {
+public:
+    Machine() =default;
+    Machine(string filename);
+    MachineState state = STATE_FRESH;
     std::deque<long> input;
     long ip = 0;
-public:
-    vector<long> output;
+    std::deque<long> output;
     vector<long> memory;
     void load_mem_from_file(string filename);
     void load_mem_from_string(string string);

@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdio>
+#include <optional>
 #include <print>
 #include <fstream>
 #include <sstream>
@@ -18,93 +19,148 @@ std::expected<vector<string>, string> read_file(const string &filename) {
     return file_contents;
 }
 
+Machine::Machine(string filename) {
+    this->load_mem_from_file(filename);
+}
+
 bool Machine::run() {
     if (memory.size() == 0) {
         println("ERROR: Nothing in memory, so no program to run");
+        state = STATE_ERROR;
         return false;
     }
-    ip = 0;
+    switch (state) {
+        case STATE_FRESH:
+        case STATE_HALTED: ip = 0; break;
+        case STATE_AWAITING_INPUT: break;
+        case STATE_RUNNING:
+            println("ERROR: Restarting a running machine shows a bug. Fix your code");
+            exit(1);
+        case STATE_ERROR:
+            println("Restarting a machine in an error condition is not wise!");
+            exit(1);
+    }
+    state = STATE_RUNNING;
 
     for (;;) {
         auto instr = make_instruction();
-        if (!instr) return false;
+        if (!instr) {
+            state = STATE_ERROR;
+            return false;
+        }
         switch (instr->type) {
             case INS_ADD:{
                 if (instr->modes[2] == MODE_IM) {
                     println("ERROR: Immediate mode not appropriate for the result of addition");
+                    state = STATE_ERROR;
                     return false;
                 }
-                long op1 = instr->get_operand(memory, 0);
-                long op2 = instr->get_operand(memory, 1);
-                memory[instr->params[2]] = op1 + op2;
+                auto op1 = instr->get_operand(memory, 0);
+                auto op2 = instr->get_operand(memory, 1);
+                if (!op1 || !op2) {
+                    state = STATE_ERROR;
+                    return false;
+                }
+                memory[instr->params[2]] = *op1 + *op2;
             } break;
             case INS_MUL:{
                 if (instr->modes[2] == MODE_IM) {
                     println("ERROR: Immediate mode not appropriate for the result of multiplication");
+                    state = STATE_ERROR;
                     return false;
                 }
-                long op1 = instr->get_operand(memory, 0);
-                long op2 = instr->get_operand(memory, 1);
-                memory[instr->params[2]] = op1 * op2;
+                auto op1 = instr->get_operand(memory, 0);
+                auto op2 = instr->get_operand(memory, 1);
+                if (!op1 || !op2) {
+                    state = STATE_ERROR;
+                    return false;
+                }
+                memory[instr->params[2]] = *op1 * *op2;
             } break;
             case INS_INPUT: {
                 if (input.size() <= 0) {
-                    println("ERROR: Not enough data in the input vector");
-                    return false;
+                    state = STATE_AWAITING_INPUT;
+                    return true;
                 }
                 if (instr->modes[0] == MODE_IM) {
                     println("ERROR: Immediate mode not appropriate for storing data");
+                    state = STATE_ERROR;
                     return false;
                 }
                 memory[instr->params[0]] = input[0];
                 input.pop_front();
             } break;
             case INS_OUTPUT: {
-                long op = instr->get_operand(memory, 0);
+                auto op = instr->get_operand(memory, 0);
                 // println("OUTPUT: {}", op);
-                output.push_back(op);
+                if (!op) {
+                    state = STATE_ERROR;
+                    return false;
+                }
+                output.push_back(*op);
             } break;
             case INS_JIF: {
-                long op1 = instr->get_operand(memory, 0);
-                long op2 = instr->get_operand(memory, 1);
-                if (op1 == 0) ip = op2;
+                auto op1 = instr->get_operand(memory, 0);
+                auto op2 = instr->get_operand(memory, 1);
+                if (!op1 || !op2) {
+                    state = STATE_ERROR;
+                    return false;
+                }
+                if (*op1 == 0) ip = *op2;
                 else ip += instr->size;
             } break;
             case INS_JIT: {
-                long op1 = instr->get_operand(memory, 0);
-                long op2 = instr->get_operand(memory, 1);
-                if (op1 != 0) ip = op2;
+                auto op1 = instr->get_operand(memory, 0);
+                auto op2 = instr->get_operand(memory, 1);
+                if (!op1 || !op2) {
+                    state = STATE_ERROR;
+                    return false;
+                }
+                if (*op1 != 0) ip = *op2;
                 else ip += instr->size;
             } break;
             case INS_LT: {
                 if (instr->modes[2] == MODE_IM) {
                     println("ERROR: Immediate mode not appropriate for storing data");
+                    state = STATE_ERROR;
                     return false;
                 }
-                long op1 = instr->get_operand(memory, 0);
-                long op2 = instr->get_operand(memory, 1);
-                if (op1 < op2) memory[instr->params[2]] = 1;
+                auto op1 = instr->get_operand(memory, 0);
+                auto op2 = instr->get_operand(memory, 1);
+                if (!op1 || !op2) {
+                    state = STATE_ERROR;
+                    return false;
+                }
+                if (*op1 < *op2) memory[instr->params[2]] = 1;
                 else memory[instr->params[2]] = 0;
             } break;
             case INS_EQ: {
                 if (instr->modes[2] == MODE_IM) {
                     println("ERROR: Immediate mode not appropriate for storing data");
+                    state = STATE_ERROR;
                     return false;
                 }
-                long op1 = instr->get_operand(memory, 0);
-                long op2 = instr->get_operand(memory, 1);
-                if (op1 == op2) memory[instr->params[2]] = 1;
+                auto op1 = instr->get_operand(memory, 0);
+                auto op2 = instr->get_operand(memory, 1);
+                if (!op1 || !op2) {
+                    state = STATE_ERROR;
+                    return false;
+                }
+                if (*op1 == *op2) memory[instr->params[2]] = 1;
                 else memory[instr->params[2]] = 0;
             } break;
-            case INS_HALT: return true;
+            case INS_HALT:
+                state = STATE_HALTED;
+                return true;
             default: {
                 println("ERROR: Unknown function (code = {})", memory[ip]);
+                state = STATE_ERROR;
                 return false;
             }
         }
         if (!instr->controls_ip) ip += instr->size;
     }
-    return true;
+    assert(0 && "Unreachable!");
 }
 
 void Machine::load_mem_from_file(string filename) {
@@ -175,13 +231,16 @@ void Machine::add_input_val(long val) {
     input.push_front(val);
 }
 
-long Instruction::get_operand(const vector<long> memory, size_t index) const {
+std::optional<long> Instruction::get_operand(const vector<long> memory, size_t index) const {
     Mode mode = modes[index];
     long param = params[index];
 
     switch (mode) {
         case MODE_IM: return param;
-        case MODE_POS: return memory[param];
+        case MODE_POS: {
+            if (param < (long)memory.size()) return memory[param];
+            else return std::nullopt;
+        }
     }
 }
 
