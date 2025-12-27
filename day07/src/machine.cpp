@@ -266,3 +266,29 @@ long Instruction::size_from_type() const {
     }
 }
 
+int drive_amp_chain_cont(vector<Machine>& amp_chain, const vector<int>& phases, int input) {
+    input = drive_amp_chain(amp_chain, phases, input);
+    for (;;) {
+        int new_input = drive_amp_chain(amp_chain, {}, input);
+        if (new_input == input) break;
+        input = new_input;
+    }
+    return input;
+}
+
+int drive_amp_chain(vector<Machine>& amp_chain, const vector<int>& phases, int input) {
+    for (int i=0; Machine& amp: amp_chain) {
+        amp.add_input_val(input);
+        if (phases.size() > 0)
+            amp.add_input_val(phases.at(i));
+        amp.run();
+        if (amp.output.size() == 0) {
+            break;
+        }
+        input = amp.output.front();
+        amp.output.pop_front();
+        i += 1;
+    }
+    return input;
+}
+

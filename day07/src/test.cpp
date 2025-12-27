@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <print>
 #include <string>
 
@@ -180,7 +181,50 @@ int main(void) {
         machine.memory[1] = 12;
         machine.memory[2] = 2;
         if (machine.run() && machine.memory[0] == 5866714) pass_count += 1;
-        else println("Test 17: Failed");
+        else println("Test {}: Failed", test_count);
+    }
+
+    test_count += 1;
+    {
+        vector<vector<int>> phase_list;
+        vector<int> phases = {5, 6, 7, 8, 9};
+        do {
+            phase_list.push_back(phases);
+        } while (std::ranges::next_permutation(phases).found);
+
+        string filename = "../day07/data/test4.txt";
+        long result = 0;
+        for (const vector<int>& phases: phase_list) {
+            vector<Machine> amp_chain;
+            for (size_t i=0; i<5; i++)
+                amp_chain.emplace_back(filename);
+            int new_input = drive_amp_chain_cont(amp_chain, phases, 0);
+            if (new_input > result) result = new_input;
+        }
+        if (result == 139629729) pass_count += 1;
+        else println("Test {}: Failed", test_count);
+    }
+
+    test_count += 1;
+    {
+        vector<vector<int>> phase_list;
+        vector<int> phases = {5, 6, 7, 8, 9};
+        do {
+            phase_list.push_back(phases);
+        } while (std::ranges::next_permutation(phases).found);
+
+        string filename = "../day07/data/test5.txt";
+        long result = 0;
+        for (const vector<int>& phases: phase_list) {
+            vector<Machine> amp_chain;
+            for (size_t i=0; i<5; i++)
+                amp_chain.emplace_back(filename);
+            int new_input = drive_amp_chain_cont(amp_chain, phases, 0);
+            if (new_input > result) result = new_input;
+        }
+        if (result == 18216) pass_count += 1;
+        else println("Test {}: Failed", test_count);
+        
     }
 
     println("Tests passed: {} / {}", test_count, pass_count);

@@ -63,4 +63,6 @@ public:
     bool run();
 };
 
+int drive_amp_chain(vector<Machine>& amp_chain, const vector<int>& phases, int input);
+int drive_amp_chain_cont(vector<Machine>& amp_chain, const vector<int>& phases, int input);
 

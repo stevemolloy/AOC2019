@@ -8,9 +8,6 @@
 using std::println;
 using std::string;
 
-int drive_amp_chain(vector<Machine>& amp_chain, const vector<int>& phases, int input);
-int drive_amp_chain_cont(vector<Machine>& amp_chain, const vector<int>& phases, int input);
-
 int main(void) {
     string filename = "data/input.txt";
     // string filename = "data/test1.txt";
@@ -52,7 +49,7 @@ int main(void) {
         phase_list.push_back(phases);
     } while (std::ranges::next_permutation(phases).found);
 
-    filename = "data/test4.txt";
+    filename = "data/input.txt";
     long part2 = 0;
     for (const vector<int>& phases: phase_list) {
         vector<Machine> amp_chain;
@@ -61,59 +58,11 @@ int main(void) {
         int new_input = drive_amp_chain_cont(amp_chain, phases, 0);
         if (new_input > part2) part2 = new_input;
     }
-    println("Final value of 'part2' = {}", part2);
-
-    filename = "data/test5.txt";
-    part2 = 0;
-    for (const vector<int>& phases: phase_list) {
-        vector<Machine> amp_chain;
-        for (size_t i=0; i<5; i++)
-            amp_chain.emplace_back(filename);
-        int new_input = drive_amp_chain_cont(amp_chain, phases, 0);
-        if (new_input > part2) part2 = new_input;
-    }
-    println("Final value of 'part2' = {}", part2);
-
-    filename = "data/input.txt";
-    part2 = 0;
-    for (const vector<int>& phases: phase_list) {
-        vector<Machine> amp_chain;
-        for (size_t i=0; i<5; i++)
-            amp_chain.emplace_back(filename);
-        int new_input = drive_amp_chain_cont(amp_chain, phases, 0);
-        if (new_input > part2) part2 = new_input;
-    }
-    println("Final value of 'part2' = {}", part2);
+    if (filename == "data/input.txt") assert(part2 == 3321777);
 
     println("Part 1: {}", part1);
     println("Part 2: {}", part2);
 
     return 0;
-}
-
-int drive_amp_chain_cont(vector<Machine>& amp_chain, const vector<int>& phases, int input) {
-    input = drive_amp_chain(amp_chain, phases, input);
-    for (;;) {
-        int new_input = drive_amp_chain(amp_chain, {}, input);
-        if (new_input == input) break;
-        input = new_input;
-    }
-    return input;
-}
-
-int drive_amp_chain(vector<Machine>& amp_chain, const vector<int>& phases, int input) {
-    for (int i=0; Machine& amp: amp_chain) {
-        amp.add_input_val(input);
-        if (phases.size() > 0)
-            amp.add_input_val(phases.at(i));
-        amp.run();
-        if (amp.output.size() == 0) {
-            break;
-        }
-        input = amp.output.front();
-        amp.output.pop_front();
-        i += 1;
-    }
-    return input;
 }
 
