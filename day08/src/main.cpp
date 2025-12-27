@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <array>
 #include <cassert>
 #include <climits>
@@ -12,7 +11,7 @@ using std::println;
 using std::string;
 using std::array;
 
-template<std::size_t SIZE>
+template<size_t SIZE>
 int count_vals(array<int, SIZE> arr, int val);
 
 constexpr int NUMLEVELS = 100;
@@ -85,7 +84,7 @@ int main(void) {
     return 0;
 }
 
-template<std::size_t SIZE>
+template<size_t SIZE>
 int count_vals(array<int, SIZE> arr, int cmp) {
     int result = 0;
     for (auto val: arr) {
