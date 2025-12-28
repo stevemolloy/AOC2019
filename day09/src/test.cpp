@@ -227,6 +227,40 @@ int main(void) {
         
     }
 
+    test_count += 1;
+    {
+        string filename = "../day09/data/test1.txt";
+        Machine machine(filename);
+        machine.run();
+        std::deque<long> expected = {109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99};
+        if (machine.output == expected)
+            pass_count += 1;
+        else
+            println("Test {}: Failed", test_count);
+    }
+
+    test_count += 1;
+    {
+        string filename = "../day09/data/test2.txt";
+        Machine machine(filename);
+        machine.run();
+        if (machine.output.size()==1 && machine.output[0] == 1219070632396864)
+            pass_count += 1;
+        else
+            println("Test {}: Failed", test_count);
+    }
+
+    test_count += 1;
+    {
+        string filename = "../day09/data/test3.txt";
+        Machine machine(filename);
+        machine.run();
+        if (machine.output.size()==1 && machine.output[0] == 1125899906842624)
+            pass_count += 1;
+        else
+            println("Test {}: Failed", test_count);
+    }
+
     println("Tests passed: {} / {}", test_count, pass_count);
 
     return 0;

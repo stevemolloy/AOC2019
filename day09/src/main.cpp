@@ -9,9 +9,6 @@ using std::string;
 
 int main(void) {
     string filename = "data/input.txt";
-    // string filename = "data/test1.txt";
-    // string filename = "data/test2.txt";
-    // string filename = "data/test3.txt";
 
     Machine machine(filename);
     if (filename == "data/input.txt") machine.add_input_val(1);
