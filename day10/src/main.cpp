@@ -97,6 +97,10 @@ int main(void) {
     }
     if (filename == "data/input.txt") assert(part1 == 347);
     if (filename == "data/test1.txt") assert(part1 == 8);
+    if (filename == "data/test2.txt") assert(part1 == 33);
+    if (filename == "data/test3.txt") assert(part1 == 35);
+    if (filename == "data/test4.txt") assert(part1 == 41);
+    if (filename == "data/test5.txt") assert(part1 == 210);
 
     long part2 = 0;
 
